@@ -22,7 +22,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors({
     // Allow both your local React app AND Hopscotch to connect
-    origin: ["http://localhost:3000", "https://hoppscotch.io","http://localhost:3001"], 
+    origin: ["http://localhost:3000", "https://hoppscotch.io","http://localhost:3001", "http://127.0.0.1:3000",], 
     credentials: true // MUST be true for cookies to work!
 }));
 app.use(cookieParser());
