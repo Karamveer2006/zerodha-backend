@@ -20,11 +20,22 @@ const {Signup,Login, userId}=require("./controllers/AuthController");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+const allowedOrigins = ["http://localhost:3000", "http://localhost:3001", "https://hoppscotch.io"];
+
 app.use(cors({
-    // Allow both your local React app AND Hopscotch to connect
-    origin: ["http://localhost:3000", "https://hoppscotch.io","http://localhost:3001", "http://127.0.0.1:3000",], 
-    credentials: true // MUST be true for cookies to work!
+    origin: function (origin, callback) {
+        // If the origin is in our list or is undefined (for non-browser requests like Hoppscotch)
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(cookieParser());
 
 main()
