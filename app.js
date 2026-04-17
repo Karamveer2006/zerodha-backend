@@ -129,10 +129,13 @@ app.post("/ordersdetails",async(req,res)=>{
 app.post("/signup",Signup);
 app.post("/login",Login);
 
-
+app.get('/', (req, res) => {
+  res.send('Backend is running on Vercel!');
+});
 
 
 
 app.listen(8080,()=>{
     console.log("app is listening to 8080");
 });
+module.exports = app;
