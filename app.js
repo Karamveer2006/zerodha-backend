@@ -20,7 +20,7 @@ const {Signup,Login, userId}=require("./controllers/AuthController");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-const allowedOrigins = ["http://localhost:3000", "http://localhost:3001","https://zerodha-dashboard-pi.vercel.app/"];
+const allowedOrigins = ["http://localhost:3000", "http://localhost:3001","https://zerodha-dashboard-pi.vercel.app"];
 
 app.use(cors({
     origin: function (origin, callback) {
