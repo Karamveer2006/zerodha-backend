@@ -12,6 +12,7 @@ const {UserModel}=require('./model/UserModel');
 
 const cookieParser=require('cookie-parser');
 const userVerification =require('./middlewares/AuthMIddleware');
+const jwt = require("jsonwebtoken");
 
 
 const bodyParser=require('body-parser')
@@ -81,11 +82,30 @@ app.get("/positionsdata",async(req,res)=>{
 
 
 app.post("/orderdata", async (req, res) => {
-   
-
     try {
-         
-        const user =await UserModel.findById(req.body.userId);
+        const authHeader = req.headers.authorization;
+        const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+        const token = req.cookies?.token || headerToken;
+        let userId = req.body.userId;
+
+        if (!userId && token) {
+            try {
+                const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+                userId = decoded.id;
+            } catch (err) {
+                return res.status(401).json({ error: "Unauthorized", message: "Invalid token" });
+            }
+        }
+
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized", message: "Missing userId" });
+        }
+
+        const user = await UserModel.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
         const orderDetails = new OrderModel({
             name: req.body.name,
             qty: req.body.qty,
@@ -106,7 +126,7 @@ app.post("/orderdata", async (req, res) => {
        
         
       
-        return res.status(201).send("Data saved successfully");
+        return res.status(201).json({ message: "Data saved successfully", orderId: orderDetails._id });
 
     } catch (err) {
         console.error("Save Error:", err.message);
@@ -120,11 +140,30 @@ app.post("/orderdata", async (req, res) => {
 });
 
 app.post("/ordersdetails",async(req,res)=>{
-    const userId=req.body.userId;
+    const authHeader = req.headers.authorization;
+    const headerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const token = req.cookies?.token || headerToken;
+    let userId = req.body.userId;
+    
+    if (!userId && token) {
+        try {
+            const decoded = jwt.verify(token, process.env.TOKEN_KEY);
+            userId = decoded.id;
+        } catch (err) {
+            return res.status(401).json({ error: "Unauthorized", message: "Invalid token" });
+        }
+    }
+    
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized", message: "Missing userId" });
+    }
     
     try{
          let allOrders=[];
-         const user = await UserModel.findById(userId).populate("orders"); 
+         const user = await UserModel.findById(userId).populate("orders");
+         if (!user) {
+             return res.status(404).json({ error: "User not found" });
+         }
          allOrders = user.orders;
    
     res.json(allOrders);
