@@ -3,6 +3,12 @@ const mongoose=require('mongoose');
 const createSecretToken  = require("../utils/secretToken");
 const bcrypt = require('bcrypt');
 
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  secure: process.env.NODE_ENV === "production",
+};
+
 module.exports.Signup = async (req, res, next) => {
   try {
     const { email, password, username } = req.body;
@@ -13,16 +19,13 @@ module.exports.Signup = async (req, res, next) => {
     const user = await UserModel.create({ email, password, username });
    
     const token = createSecretToken(user._id);
-    res.cookie("token", token, {
-      withCredentials: true,
-      httpOnly: false,
-    });
+        res.cookie("token", token, cookieOptions);
     res
       .status(201)
-      .json({ message: "User signed in successfully", success: true, user });
-    next();
+      .json({ message: "User signed in successfully", success: true, user, token });
   } catch (error) {
     console.error(error);
+        return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -41,13 +44,10 @@ module.exports.Login = async (req, res, next) => {
       return res.json({message:'Incorrect password or email' }) 
     }
      const token = createSecretToken(user._id);
-     res.cookie("token", token, {
-       withCredentials: true,
-       httpOnly: false,
-     });
-     res.status(201).json({ message: "User logged in successfully", success: true ,user});
-     next()
+     res.cookie("token", token, cookieOptions);
+    res.status(201).json({ message: "User logged in successfully", success: true ,user, token});
   } catch (error) {
     console.error(error);
+    return res.status(500).json({ message: "Server error" });
   }
 }
