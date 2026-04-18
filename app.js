@@ -101,32 +101,29 @@ app.post("/orderdata", async (req, res) => {
             return res.status(401).json({ error: "Unauthorized", message: "Missing userId" });
         }
 
-        const user = await UserModel.findById(userId);
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        const orderDetails = new OrderModel({
+        const orderDetails = await OrderModel.create({
             name: req.body.name,
             qty: req.body.qty,
             price: req.body.price,
             mode: req.body.mode,
-           
         });
-       
-         
-        
-       user.orders.push(orderDetails._id);
-        await orderDetails.save();
-       
-        await user.save();
-                
-        
 
-       
-        
-      
-        return res.status(201).json({ message: "Data saved successfully", orderId: orderDetails._id });
+        const updatedUser = await UserModel.findByIdAndUpdate(
+            userId,
+            { $push: { orders: orderDetails._id } },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            await OrderModel.findByIdAndDelete(orderDetails._id);
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        return res.status(201).json({
+            message: "Data saved successfully",
+            orderId: orderDetails._id,
+            ordersCount: updatedUser.orders.length,
+        });
 
     } catch (err) {
         console.error("Save Error:", err.message);
